@@ -7,3 +7,4 @@
     - iojs
   install:
     - "npm install mocha"
+    - "npm install"
