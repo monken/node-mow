@@ -5,5 +5,5 @@
     - "0.11"
     - "0.10"
     - iojs
-  before_install:
+  install:
     - "npm install --dev"

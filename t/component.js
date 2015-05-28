@@ -2,7 +2,7 @@ var assert = require('assert'),
   _ = require('lodash'),
   PromiseA = require('bluebird');
 
-var Component = require('../mow/component');
+var Component = require('../component');
 
 describe('component', function() {
   it('constructor', function() {
@@ -27,8 +27,4 @@ describe('component', function() {
     }, 'required attributes cannot be null/undefined');
   });
 
-  it('Promise isa Promise', function() {
-    var p = PromiseA.resolve();
-    assert.ok(p instanceof Promise, 'promise is a promise');
-  });
 });
