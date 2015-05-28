@@ -8,7 +8,9 @@
   "name": "mow",
   "version": "0.0.1",
   "main": "index.js",
-  "devDependencies": {},
+  "devDependencies": {
+    "mocha": "^2.0.0"
+  },
   "scripts": {
     "test": "mocha t/"
   },
