@@ -6,4 +6,4 @@
     - "0.10"
     - iojs
   install:
-    - "npm install --dev"
+    - "npm install mocha"
