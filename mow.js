@@ -13,12 +13,12 @@ module.exports = require('./component').extend({
         return this.buildController(controller, [base, subbase].join('/'));
       }, this).value();
     } else if (_.isFunction(controller)) {
-      var instance = new controller({
+      var instance = new controller(_.extend({
         express: this.express,
         base: base,
         filename: base,
         logger: this.logger,
-      });
+      }, this.controllers[base] || {}));
       return instance;
     } else {
       this.logger.error('controller is not a function', controller);
@@ -28,7 +28,7 @@ module.exports = require('./component').extend({
     var server = http.createServer(this.express);
     server.on('error', function(e) {
       if (e.code === 'EADDRINUSE') this.logger.fatal('port %s already in use', this.listen.port);
-    });
+    }.bind(this));
 
     server.listen(this.listen.port, this.listen.host, function(err) {
       this.logger.info('listening on http://' + [this.listen.host, this.listen.port].join(':'));
@@ -45,6 +45,9 @@ module.exports = require('./component').extend({
   attributes: {
     controllers: {
       initializer: 'buildControllers',
+      default: function() {
+        return {};
+      }
     },
     listen: {
       required: true,

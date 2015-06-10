@@ -3,47 +3,47 @@ var _ = require('lodash'),
 
 module.exports = require('./component').extend({
   initActions: function() {
+    _.forEach(this.actions || {}, this.initAction, this);
+  },
+  initAction: function(action, path) {
+    if (!path.match(/^\//)) return; // actions start with a slash
     var app = this.express,
       actions = this.actions || {};
-    _.forEach(actions, function(action, path) {
-      if (!path.match(/^\//)) return; // actions start with a slash
-      path = ['', this.base].join('/') + path;
-      this.logger.debug(path);
-      var handlers = action.handler;
-      if (!_.isArray(handlers)) handlers = [handlers];
+    path = ['', this.base].join('/') + path;
+    this.logger.debug(path);
+    var handlers = action.handler;
+    if (!_.isArray(handlers)) handlers = [handlers];
 
-      action.method = action.method || 'get';
-      var methods = action.method;
-      if (!_.isArray(methods)) methods = [methods];
-      methods.forEach(function(method) {
-        ['begin', 'end'].forEach(function(sAction) {
-          if (!actions[sAction]) return;
-          sHandlers = actions[sAction].handler;
-          if (!_.isArray(sHandlers)) sHandlers = [sHandlers];
-          if (actions[sAction].method.indexOf(method) !== -1)
-            handlers[sAction === 'begin' ? 'unshift' : 'push'].apply(handlers, sHandlers);
-        }, this);
-        handlers = handlers.map(function(handler) {
-          return function(req, res, next) {
-            this.logger.debug('calling controller', path, ' with params', req.params);
-            try {
-              var ret = handler.apply(this, arguments);
-              if (ret instanceof Promise) ret.then(next, function(e) {
-                if(actions.catch) actions.catch.handler.call(this, req, res, e);
-                if(actions.end) actions.end.handler.call(this, req, res);
-              }.bind(this));
-            } catch (e) {
-                if(actions.catch) actions.catch.handler.call(this, req, res, e);
-                if(actions.end) actions.end.handler.call(this, req, res);
-            };
-          }.bind(this);
-        }, this);
-        handlers.unshift(path);
-        app[method].apply(app, handlers);
-        handlers.shift();
+    action.method = action.method || 'get';
+    var methods = action.method;
+    if (!_.isArray(methods)) methods = [methods];
+    methods.forEach(function(method) {
+      ['begin', 'end'].forEach(function(sAction) {
+        if (!actions[sAction]) return;
+        sHandlers = actions[sAction].handler;
+        if (!_.isArray(sHandlers)) sHandlers = [sHandlers];
+        if (actions[sAction].method.indexOf(method) !== -1)
+          handlers[sAction === 'begin' ? 'unshift' : 'push'].apply(handlers, sHandlers);
       }, this);
-
-    }.bind(this));
+      handlers = handlers.map(function(handler) {
+        return function(req, res, next) {
+          this.logger.debug('calling controller', path, ' with params', req.params);
+          try {
+            var ret = handler.apply(this, arguments);
+            if (ret instanceof Promise) ret.then(next, function(e) {
+              if (actions.catch) actions.catch.handler.call(this, req, res, e);
+              if (actions.end) actions.end.handler.call(this, req, res);
+            }.bind(this));
+          } catch (e) {
+            if (actions.catch) actions.catch.handler.call(this, req, res, e);
+            if (actions.end) actions.end.handler.call(this, req, res);
+          };
+        }.bind(this);
+      }, this);
+      handlers.unshift(path);
+      app[method].apply(app, handlers);
+      handlers.shift();
+    }, this);
   },
   initViews: function() {
     if (!this.views) return;
