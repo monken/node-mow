@@ -29,7 +29,7 @@ module.exports = require('./component').extend({
         return function(req, res, next) {
           this.logger.debug('calling controller', path, ' with params', req.params);
           try {
-            var ret = handler.apply(this, arguments);
+            var ret = _.isString(handler) ? this[handler].apply(this, arguments) : handler.apply(this, arguments);
             if (ret instanceof Promise) ret.then(next, function(e) {
               if (actions.catch) actions.catch.handler.call(this, req, res, e);
               if (actions.end) actions.end.handler.call(this, req, res);
