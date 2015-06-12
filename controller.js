@@ -9,7 +9,7 @@ module.exports = require('./component').extend({
     if (!path.match(/^\//)) return; // actions start with a slash
     var app = this.express,
       actions = this.actions || {};
-    path = ['', this.base].join('/') + path;
+    path = ['', this.configKey].join('/') + path;
     this.logger.debug(path);
     var handlers = action.handler;
     if (!_.isArray(handlers)) handlers = [handlers];
@@ -47,11 +47,11 @@ module.exports = require('./component').extend({
   },
   initViews: function() {
     if (!this.views) return;
-    this.views = this.initComponentWith(this.views, '../../view/');
+    this.views = this.initComponentWith(this.views, this.cwd + '/view/');
   },
   initModels: function() {
     if (!this.models) return;
-    this.models = this.initComponentWith(this.models, '../../model/');
+    this.models = this.initComponentWith(this.models, this.cwd + '/model/');
   },
   getView: function(view) {
     if (!this.views[view]) this.throw('ViewNotFound', 'view "%s" doesn\'t exist', view);
@@ -70,17 +70,18 @@ module.exports = require('./component').extend({
       required: true,
       initializer: 'initActions',
     },
-    base: {
+    cwd: {
+      required: true,
+    },
+    configKey: {
       required: true,
     },
     express: {
       required: true,
     },
     views: {
-      initializer: 'initViews',
     },
     models: {
-      initializer: 'initModels',
     },
   },
 });

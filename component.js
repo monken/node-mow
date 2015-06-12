@@ -1,72 +1,98 @@
 var _ = require('lodash'),
-	util = require('util');
+  util = require('util'),
+  find = require('find');
 
 var Component = module.exports = function(args) {
-	args = args || {};
-	this.initAttributes(args);
-	this.callInitializers();
+  args = args || {};
+  this.isInstance = true;
+  this.initAttributes(args);
+  this.callInitializers();
 };
 
 Component.extend = require('./extend');
 
 _.extend(Component.prototype, {
-	initAttributes: function(args) {
-		_.forEach(this.constructor.attributes, function(value, attr) {
-			this.initAttribute(value, attr, args);
-		}, this);
-	},
-	initAttribute: function(config, attr, args) {
-		var value = _.without([args[attr], this[attr], config.default], undefined)[0];
-		if(value === config.default && _.isFunction(value)) value = value.apply(this);
-		if(_.isUndefined(value) && config.builder) value = this[config.builder].apply(this);
-		if(config.required && (_.isUndefined(value) || _.isNull(value))) {
-			this.throw('AttributeRequired', 'attribute "' + attr + '" is required');
-		}
-		this[attr] = value;
-	},
-	initComponentWith: function(components, base, config) {
+  initAttributes: function(args) {
+    _.forEach(this.constructor.attributes, function(value, attr) {
+      this.initAttribute(value, attr, args);
+    }, this);
+  },
+  initAttribute: function(config, attr, args) {
+    var value = _.without([args[attr], this[attr], config.default], undefined)[0];
+    if (value === config.default && _.isFunction(value)) value = value.apply(this);
+    if (_.isUndefined(value) && config.builder) value = this[config.builder].apply(this);
+    if (config.required && (_.isUndefined(value) || _.isNull(value))) {
+      this.throw('AttributeRequired', 'attribute "%s" is required', attr);
+    }
+    this[attr] = value;
+  },
+  initComponentsFromPath: function(path, config, defaults) {
+    var components = {};
+    find.fileSync(/\.js$/, path).forEach(function(file) {
+      var name = file.substr(path.length).replace(/\.js$/, '');
+      components[name] = {
+        name: file,
+        arguments: _.defaults({
+          file: file,
+          configKey: name,
+        }, config[name], defaults),
+      };
+    }, this);
+    return this.initComponentsWith(components);
+  },
+  initComponentsWith: function(components, config) {
     config = config || {};
     if (!_.isArray(components) && !_.isPlainObject(components)) components = [components];
     var collection = {};
     _.forEach(components, function(component, name) {
-      var Constructor;
+      var Constructor, config;
       if (_.isString(component))
-        Constructor = require(base + component);
+        Constructor = require(component);
       else if (_.isPlainObject(component)) {
-        Constructor = require(base + component.name);
-        config = _.extend(config, component.arguments);
-        component = _.isNumber(name) ? component.name : name;
+        Constructor = require(component.name);
+        config = _.defaults({
+          logger: this.logger
+        }, component.arguments, config);
+        name = _.isNumber(name) ? component.name : name;
       } else Constructor = component;
       if (_.isFunction(Constructor)) {
-        this.logger.debug('component ' + base + component + ' initialized');
-        collection[component] = new Constructor(config);
+        if (Constructor.isInstance) collection[name] = Constructor;
+        else collection[name] = new Constructor(config);
+        this.logger.debug('component %s initialized', component.arguments.configKey || name);
       }
     }, this);
     return collection;
   },
-	callInitializers: function() {
-		_.forEach(this.constructor.attributes, function(config, attr) {
-			if(_.isFunction(config.initializer))
-				config.initializer.apply(this, arguments);
-			else if(_.isString(config.initializer))
-				this[config.initializer].apply(this, arguments);
-		}, this);
-	},
-	throw: function(name, message) {
-		var args = [].slice.call(arguments, 2);
-		args.unshift(message);
-		throw { name: name, message: util.format.apply(util, args) };
-	},
+  callInitializers: function() {
+    _.forEach(this.constructor.attributes, function(config, attr) {
+      if (_.isFunction(config.initializer))
+        config.initializer.apply(this, arguments);
+      else if (_.isString(config.initializer))
+        this[config.initializer].apply(this, arguments);
+    }, this);
+  },
+  throw: function(name, message) {
+    var args = [].slice.call(arguments, 2);
+    args.unshift(message);
+    var e = new Error();
+    _.extend(e, {
+      name: name,
+      message: util.format.apply(util, args)
+    });
+    throw e;
+  },
 });
 _.extend(Component, {
-	attributes: {
-		logger: {
-			required: true,
-			default: console,
-		},
-		config: {
-			required: true,
-			default: {},
-		},
-	}
+  attributes: {
+    logger: {
+      required: true,
+      default: console,
+    },
+    config: {
+      required: true,
+      default: function() { return {}; },
+    },
+    file: {
+    },
+  }
 });

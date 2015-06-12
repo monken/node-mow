@@ -3,7 +3,7 @@
     "bluebird": "^2.9.14",
     "express": "^4.12.3",
     "lodash": "^3.5.0",
-    "require-all": "^1.0.0"
+    "find": "^0.2.2"
   },
   "name": "mow",
   "version": "0.0.1",

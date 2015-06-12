@@ -4,25 +4,25 @@ var _ = require('lodash'),
 module.exports = require('./component').extend({
   buildControllers: function() {
     this.initUse();
-    var controllers = require('require-all')(__dirname + '/../../controller/');
-    return _(controllers).map(this.buildController, this).value();
+    this.buildModels();
+    this.buildViews();
+    var dir = this.cwd + '/controller/';
+    this.controllers = this.initComponentsFromPath(dir, this.controllers, {
+      express: this.express,
+      cwd: this.cwd,
+      models: this.models,
+      views: this.views,
+      logger: this.logger,
+    });
+    return;
   },
-  buildController: function(controller, base) {
-    if (_.isPlainObject(controller)) {
-      return _(controller).map(function(controller, subbase) {
-        return this.buildController(controller, [base, subbase].join('/'));
-      }, this).value();
-    } else if (_.isFunction(controller)) {
-      var instance = new controller(_.extend({
-        express: this.express,
-        base: base,
-        filename: base,
-        logger: this.logger,
-      }, this.controllers[base] || {}));
-      return instance;
-    } else {
-      this.logger.error('controller is not a function', controller);
-    }
+  buildModels: function() {
+    var dir = this.cwd + '/model/';
+    this.models = this.initComponentsFromPath(dir, this.models);
+  },
+  buildViews: function() {
+    var dir = this.cwd + '/view/';
+    this.views = this.initComponentsFromPath(dir, this.views);
   },
   run: function() {
     var server = http.createServer(this.express);
@@ -36,7 +36,9 @@ module.exports = require('./component').extend({
 
   },
   initUse: function() {
-    var middlewares = this.initComponentWith(this.use, '');
+    if (this._initUse) return;
+    else this._initUse = true;
+    var middlewares = this.initComponentsWith(this.use);
     _.values(middlewares).forEach(function(middleware) {
       this.express.use(middleware);
     }, this);
@@ -49,6 +51,16 @@ module.exports = require('./component').extend({
         return {};
       }
     },
+    models: {
+      default: function() {
+        return {};
+      }
+    },
+    views: {
+      default: function() {
+        return {};
+      }
+    },
     listen: {
       required: true,
       default: function() {
@@ -57,6 +69,9 @@ module.exports = require('./component').extend({
           port: 3000,
         }
       },
+    },
+    cwd: {
+      required: true,
     },
     use: {
       default: function() {
