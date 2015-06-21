@@ -30,12 +30,13 @@ _.extend(Component.prototype, {
     var components = {};
     find.fileSync(/\.js$/, path).forEach(function(file) {
       var name = file.substr(path.length).replace(/\.js$/, '');
+      var wildcard = name.replace(/[^\/]+$/, '*');
       components[name] = {
         name: file,
         arguments: _.defaults({
           file: file,
           configKey: name,
-        }, config[name], defaults),
+        }, config[name], config[wildcard], defaults),
       };
     }, this);
     return this.initComponentsWith(components);
