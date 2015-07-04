@@ -72,6 +72,9 @@ module.exports = require('./component').extend({
     },
     cwd: {
       required: true,
+      default: function() {
+        return process.cwd();
+      },
     },
     use: {
       default: function() {
