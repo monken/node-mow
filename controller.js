@@ -6,11 +6,11 @@ module.exports = require('./component').extend({
     _.forEach(this.actions || {}, this.initAction, this);
   },
   initAction: function(action, path) {
-    if (!path.match(/^\//)) return; // actions start with a slash
+    if (_.isString(action.path)) path = action.path;
+    if (!path.match(/^\//) && path !== '') return; // actions start with a slash
     var app = this.express,
       actions = this.actions || {};
     path = ['', this.configKey].join('/') + path;
-    this.logger.debug(path);
     var handlers = action.handler;
     if (!_.isArray(handlers)) handlers = [handlers];
 
@@ -18,6 +18,7 @@ module.exports = require('./component').extend({
     var methods = action.method;
     if (!_.isArray(methods)) methods = [methods];
     methods.forEach(function(method) {
+      this.logger.debug(method.toUpperCase() + '\t' + path);
       ['begin', 'end'].forEach(function(sAction) {
         if (!actions[sAction]) return;
         sHandlers = actions[sAction].handler;
@@ -29,19 +30,29 @@ module.exports = require('./component').extend({
         return function(req, res, next) {
           this.logger.debug('calling controller', path, ' with params', req.params);
           try {
-            var ret = _.isString(handler) ? this[handler].apply(this, arguments) : handler.apply(this, arguments);
-            if (ret instanceof Promise) ret.then(next, function(e) {
-              if (actions.catch) actions.catch.handler.call(this, req, res, e);
-              if (actions.end) actions.end.handler.call(this, req, res);
-            }.bind(this));
+            var ret = _.isString(handler) ? this[handler].call(this, req, res, next) : handler.call(this, req, res, next);
+            if (ret && !(ret instanceof Promise)) ret = Promise.resolve(ret);
+            if (ret instanceof Promise) ret.then(function(body) {
+              res.body = body;
+              next();
+            }, next);
           } catch (e) {
-            if (actions.catch) actions.catch.handler.call(this, req, res, e);
-            if (actions.end) actions.end.handler.call(this, req, res);
+            next(e);
           };
         }.bind(this);
       }, this);
       handlers.unshift(path);
       app[method].apply(app, handlers);
+      if (actions.catch) {
+        app.use(path, function(err, req, res, next) {
+          var ret = actions.catch.handler.apply(this, arguments);
+          if (ret instanceof Promise) ret.then(function(body) {
+            res.body = body;
+            next(err);
+          }, next);
+          else next(err);
+        }.bind(this));
+      }
       handlers.shift();
     }, this);
   },
@@ -53,13 +64,11 @@ module.exports = require('./component').extend({
     if (!this.models) return;
     this.models = this.initComponentWith(this.models, this.cwd + '/model/');
   },
-  getView: function(view) {
-    if (!this.views[view]) this.throw('ViewNotFound', 'view "%s" doesn\'t exist', view);
-    return this.views[view];
+  getView: function(name, clone) {
+    return this.getComponent('views', name, clone);
   },
-  getModel: function(model) {
-    if (!this.models[model]) this.throw('ModelNotFound', 'model "%s" doesn\'t exist', model);
-    return this.models[model];
+  getModel: function(name, clone) {
+    return this.getComponent('models', name, clone);
   },
   handleError: function(req, res, e) {
     res.status(500).send('an error occurred\n');
@@ -79,9 +88,7 @@ module.exports = require('./component').extend({
     express: {
       required: true,
     },
-    views: {
-    },
-    models: {
-    },
+    views: {},
+    models: {},
   },
 });

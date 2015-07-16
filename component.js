@@ -52,7 +52,8 @@ _.extend(Component.prototype, {
       else if (_.isPlainObject(component)) {
         Constructor = require(component.name);
         config = _.defaults({
-          logger: this.logger
+          logger: this.logger,
+          cwd: this.cwd,
         }, component.arguments, config);
         name = _.isNumber(name) ? component.name : name;
       } else Constructor = component;
@@ -64,6 +65,11 @@ _.extend(Component.prototype, {
     }, this);
     return collection;
   },
+  getComponent: function(attr, name, clone) {
+    if (!this[attr][name]) this.throw('ComponentNotFound', '%s "%s" doesn\'t exist', attr, name);
+    if(clone) return this[attr][name].clone(clone);
+    else return this[attr][name];
+  },
   callInitializers: function() {
     _.forEach(this.constructor.attributes, function(config, attr) {
       if (_.isFunction(config.initializer))
@@ -71,6 +77,10 @@ _.extend(Component.prototype, {
       else if (_.isString(config.initializer))
         this[config.initializer].apply(this, arguments);
     }, this);
+  },
+  clone: function(attrs) {
+    var attributes = _.pick(this, _.keys(this.constructor.attributes));
+    return new this.constructor(_.extend({}, attributes, attrs));
   },
   throw: function(name, message) {
     var args = [].slice.call(arguments, 2);
@@ -85,6 +95,12 @@ _.extend(Component.prototype, {
 });
 _.extend(Component, {
   attributes: {
+    cwd: {
+      required: true,
+      default: function() {
+        return process.cwd();
+      },
+    },
     logger: {
       required: true,
       default: console,

@@ -23,8 +23,8 @@ module.exports = function extend(protoProps, staticProps) {
   _.extend(child, staticProps);
 
   ['attributes'].forEach(function(attribute) {
-    _.extend(child[attribute], parent[attribute]);
     if(staticProps) _.extend(child[attribute], staticProps[attribute]);
+    _.defaults(child[attribute], parent[attribute]);
   });
 
   // Set the prototype chain to inherit from `parent`, without calling

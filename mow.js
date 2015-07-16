@@ -17,12 +17,17 @@ module.exports = require('./component').extend({
     return;
   },
   buildModels: function() {
+    this.buildStores();
     var dir = this.cwd + '/model/';
-    this.models = this.initComponentsFromPath(dir, this.models);
+    this.models = this.initComponentsFromPath(dir, this.models, { _stores: this.stores });
   },
   buildViews: function() {
     var dir = this.cwd + '/view/';
     this.views = this.initComponentsFromPath(dir, this.views);
+  },
+  buildStores: function() {
+    var dir = this.cwd + '/store/';
+    this.stores = this.initComponentsFromPath(dir, this.stores);
   },
   run: function() {
     var server = http.createServer(this.express);
@@ -61,6 +66,11 @@ module.exports = require('./component').extend({
         return {};
       }
     },
+    stores: {
+      default: function() {
+        return {};
+      }
+    },
     listen: {
       required: true,
       default: function() {
@@ -68,12 +78,6 @@ module.exports = require('./component').extend({
           host: 'localhost',
           port: 3000,
         }
-      },
-    },
-    cwd: {
-      required: true,
-      default: function() {
-        return process.cwd();
       },
     },
     use: {
