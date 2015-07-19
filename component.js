@@ -66,6 +66,7 @@ _.extend(Component.prototype, {
     return collection;
   },
   getComponent: function(attr, name, clone) {
+    clone = clone || {};
     if (!this[attr][name]) this.throw('ComponentNotFound', '%s "%s" doesn\'t exist', attr, name);
     if(clone) return this[attr][name].clone(clone);
     else return this[attr][name];
@@ -80,7 +81,7 @@ _.extend(Component.prototype, {
   },
   clone: function(attrs) {
     var attributes = _.pick(this, _.keys(this.constructor.attributes));
-    return new this.constructor(_.extend({}, attributes, attrs));
+    return new this.constructor(_.extend(attributes, attrs));
   },
   throw: function(name, message) {
     var args = [].slice.call(arguments, 2);
