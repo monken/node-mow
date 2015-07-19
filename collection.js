@@ -9,7 +9,6 @@ module.exports = require('./component').extend({
   buildStores: function() {
     _.keys(this._stores).forEach(function(name) {
       var store = this.getComponent('_stores', name, this.stores[name]);
-      delete this.stores[name];
       this.stores['_' + name] = store;
     }, this);
   },
@@ -45,7 +44,7 @@ module.exports = require('./component').extend({
     fetch: function(options) {
       return this.collection.getStore().getItem(this.toJSON(), options).then(function(res) {
         return _.extend(this.attributes, res);
-      });
+      }.bind(this));
     },
   }, {
     attributes: {
@@ -62,9 +61,9 @@ module.exports = require('./component').extend({
 }, {
   attributes: {
     _stores: {
+      initializer: 'buildStores',
     },
     stores: {
-      initializer: 'buildStores',
       default: function() {
         return {};
       },
