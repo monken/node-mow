@@ -14,7 +14,7 @@ module.exports = require('./component').extend({
   },
   fetch: function(options) {
     options = options || {};
-    return this.getStore(options.store).listItems();
+    return this.getStore(options.store).listItems(options);
   },
   add: function(models, options) {
     var singular = !_.isArray(models);
