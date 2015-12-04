@@ -28,7 +28,6 @@ module.exports = require('./component').extend({
       }, this);
       handlers = handlers.map(function(handler) {
         return function(req, res, next) {
-          this.logger.debug('calling controller', path, ' with params', req.params);
           try {
             var ret = _.isString(handler) ? this[handler].call(this, req, res, next) : handler.call(this, req, res, next);
             if (ret && !(ret instanceof Promise)) ret = Promise.resolve(ret);
@@ -41,6 +40,10 @@ module.exports = require('./component').extend({
           };
         }.bind(this);
       }, this);
+      handlers.unshift(function(req, res, next) {
+        this.logger.debug(method.toUpperCase(), path, ' with params', req.params);
+        next();
+      }.bind(this));
       handlers.unshift(path);
       app[method].apply(app, handlers);
       if (actions.catch) {
