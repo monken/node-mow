@@ -6,7 +6,7 @@
     "find": "^0.2.2"
   },
   "name": "mow",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "index.js",
   "devDependencies": {
     "mocha": "^2.0.0"
