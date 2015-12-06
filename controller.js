@@ -91,6 +91,9 @@ module.exports = require('./component').extend({
     express: {
       required: true,
     },
+    getController: {
+      required: true,
+    },
     views: {},
     models: {},
   },

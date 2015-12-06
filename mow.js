@@ -13,6 +13,9 @@ module.exports = require('./component').extend({
       models: this.models,
       views: this.views,
       logger: this.logger,
+      getController: function(name) {
+        return this.controllers[name];
+      }.bind(this),
     });
     return;
   },
