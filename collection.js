@@ -16,6 +16,10 @@ module.exports = require('./component').extend({
     options = options || {};
     return this.getStore(options.store).listItems(options);
   },
+  save: function(options) {
+    options = options || {};
+    return this.getStore(options.store).putItems(_.invoke(this.models, 'toJSON'), options);
+  },
   add: function(models, options) {
     var singular = !_.isArray(models);
     models = singular ? (models ? [models] : []) : models.slice();
@@ -29,7 +33,7 @@ module.exports = require('./component').extend({
       return model;
     }, this);
     this.models.push.apply(this.models, models);
-    return singular ? models[0] : models;
+    return singular ? models[0] : this;
   },
   model: require('./component').extend({
     toJSON: function(options) {
