@@ -87,9 +87,12 @@ _.extend(Component.prototype, {
   throw: function(name, message) {
     var args = [].slice.call(arguments, 2);
     args.unshift(message);
+    if(_.isPlainObject(args[args.length - 1]))
+      var context = args.pop();
     var e = new Error();
     _.extend(e, {
       name: name,
+      context: context,
       message: util.format.apply(util, args)
     });
     throw e;
