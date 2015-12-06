@@ -35,8 +35,9 @@ _.extend(Component.prototype, {
         name: file,
         arguments: _.defaults({
           file: file,
+        }, config[name], config[wildcard], defaults, {
           configKey: name,
-        }, config[name], config[wildcard], defaults),
+        }),
       };
     }, this);
     return this.initComponentsWith(components);

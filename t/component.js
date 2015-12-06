@@ -15,7 +15,7 @@ describe('component', function() {
   });
   it('constructorAttr', function() {
     var c = new Component({
-      logger: new Date
+      logger: new Date,
     });
     assert.ok(c.logger instanceof Date, 'Attribute value from args takes precedence');
   });
