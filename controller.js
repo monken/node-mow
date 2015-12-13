@@ -45,17 +45,16 @@ module.exports = require('./component').extend({
         next();
       }.bind(this));
       handlers.unshift(path);
-      app[method].apply(app, handlers);
       if (actions.catch) {
-        app.use(path, function(err, req, res, next) {
-          var ret = actions.catch.handler.apply(this, arguments);
-          if (ret instanceof Promise) ret.then(function(body) {
-            res.body = body;
-            next(err);
+        handlers.push(function(err, req, res, next) {
+          Promise.try(function() {
+            return actions.catch.handler.call(this, err, req, res, next);
+          }.bind(this)).then(function() {
+            next()
           }, next);
-          else next(err);
         }.bind(this));
       }
+      app[method].apply(app, handlers);
       handlers.shift();
     }, this);
   },

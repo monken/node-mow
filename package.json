@@ -2,8 +2,9 @@
   "dependencies": {
     "bluebird": "^2.9.14",
     "express": "^4.12.3",
+    "find": "^0.2.2",
     "lodash": "^3.10.0",
-    "find": "^0.2.2"
+    "moment": "^2.10.6"
   },
   "name": "mow",
   "version": "0.0.2",
