@@ -92,7 +92,7 @@ _.extend(Component.prototype, {
     var e = new Error();
     _.extend(e, {
       name: name,
-      context: context,
+      context: context || {},
       message: util.format.apply(util, args)
     });
     throw e;

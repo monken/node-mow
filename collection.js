@@ -25,7 +25,8 @@ module.exports = require('./component').extend({
     models = singular ? (models ? [models] : []) : models.slice();
     models = models.map(function(model) {
       model = _.isPlainObject(model) ? new this.model({
-        attributes: model
+        attributes: model,
+        logger: this.logger,
       }) : model;
       _.defaults(model, {
         collection: this
@@ -35,33 +36,7 @@ module.exports = require('./component').extend({
     this.models.push.apply(this.models, models);
     return singular ? models[0] : this;
   },
-  model: require('./component').extend({
-    toJSON: function(options) {
-      return _.clone(this.attributes);
-    },
-    save: function(options) {
-      return this.collection.getStore().putItem(this.toJSON(), options);
-    },
-    destroy: function(options) {
-      return this.collection.getStore().deleteItem(this.toJSON(), options);
-    },
-    fetch: function(options) {
-      return this.collection.getStore().getItem(this.toJSON(), options).then(function(res) {
-        return _.extend(this.attributes, res);
-      }.bind(this));
-    },
-  }, {
-    attributes: {
-      attributes: {
-        default: function() {
-          return {};
-        },
-      },
-      idAttribute: {
-        default: 'Id',
-      }
-    }
-  }),
+  model: require('./model'),
 }, {
   attributes: {
     _stores: {
